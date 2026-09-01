@@ -1,0 +1,6 @@
+#include "DialogueManager.h"
+#include <QRandomGenerator>
+DialogueManager::DialogueManager(QObject *p) : QObject(p) {
+    m_lines["coding"] = {"The boss finally started coding today."}; m_lines["build_failed"] = {"The build failed.", "Again?", "Maybe read the error message?"}; m_lines["build_success"] = {"It finally passed!"}; m_lines["high_cpu"] = {"The CPU is almost on fire."}; m_lines["late_night"] = {"Are you sure you do not want to sleep?"}; m_lines["git_commit"] = {"You actually committed code today!"}; m_lines["program_crash"] = {"It is dead. Not my fault."}; m_lines["idle"] = {"Waiting for the next bug..."};
+}
+QString DialogueManager::forEvent(const QString &key, int count) { if (key == "build_failed" && count == 17) return QStringLiteral("第 17 次编译失败，我已经习惯了。"); if (key == "coding") return QStringLiteral("主人今天终于开始工作了。"); if (key == "high_cpu") return QStringLiteral("CPU 都快烧了。"); if (key == "late_night") return QStringLiteral("你确定不睡？"); if (key == "git_commit") return QStringLiteral("今天居然提交代码了！"); if (key == "program_crash") return QStringLiteral("它死了，不是我干的。"); const auto lines = m_lines.value(key); if (lines.isEmpty()) return {}; int i = QRandomGenerator::global()->bounded(lines.size()); if (lines.size() > 1 && lines[i] == m_previous.value(key)) i = (i + 1) % lines.size(); m_previous[key] = lines[i]; return lines[i]; }
