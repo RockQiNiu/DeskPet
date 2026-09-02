@@ -1,4 +1,5 @@
 #include "ActivityMonitor.h"
+#include <QDebug>
 
 #ifdef Q_OS_WIN
 #include <windows.h>
@@ -9,8 +10,8 @@ bool isIde(const QString &value)
 {
     const QString lower = value.toLower();
     static const QStringList names = {
-        "code.exe", "visual studio", "devenv.exe", "qtcreator", "clion",
-        "rider", "vim", "nvim", "neovide", "vscode"
+        "code.exe", "visual studio", "devenv.exe", "qtcreator", "qt creator",
+        "clion", "rider", "vim", "nvim", "neovide", "vscode", "code - insiders"
     };
     for (const auto &name : names) if (lower.contains(name)) return true;
     return false;
@@ -41,8 +42,14 @@ void ActivityMonitor::pollForegroundWindow()
     const QString title = QString::fromWCharArray(titleBuffer);
     const bool active = isIde(executable) || isIde(title);
     const QString identity = executable + QLatin1Char('|') + title;
-    if (active && (!m_ideActive || identity != m_lastIdentity)) emit ideFocused(executable, title);
-    if (!active && m_ideActive) emit ideFocusLost();
+    if (active && (!m_ideActive || identity != m_lastIdentity)) {
+        qInfo().noquote() << "[ActivityMonitor] IDE focused:" << executable << "|" << title;
+        emit ideFocused(executable, title);
+    }
+    if (!active && m_ideActive) {
+        qInfo() << "[ActivityMonitor] IDE focus lost";
+        emit ideFocusLost();
+    }
     m_ideActive = active; m_lastIdentity = identity;
 #endif
 }

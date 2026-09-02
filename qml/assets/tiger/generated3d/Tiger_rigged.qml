@@ -6,6 +6,10 @@ import QtQuick.Timeline
 Node {
     id: node
     property string activeAnimation: "Idle"
+    // Independent of imported glTF timelines. This is used by the desktop pet
+    // for a safe procedural gait on Qt Quick 3D 6.9.
+    property bool fallbackWalkEnabled: false
+    property bool fallbackJumpEnabled: false
 
     // Resources
     property url textureData: "maps/textureData.jpg"
@@ -1631,14 +1635,18 @@ Node {
         startFrame: 0
         endFrame: 1034
         currentFrame: 0
-        enabled: node.activeAnimation === "Walk"
+        // The glTF keyframe timeline and the fallback gait used to run at the
+        // same time and write the same skeleton transforms. Qt 6.9's Quick3D
+        // renderer can crash in that situation. The fallback below is the
+        // single owner of walking bone transforms.
+        enabled: false
         animations: TimelineAnimation {
             id: walkPlayer
             // One gait cycle lasts 1.4 seconds; desktop movement lasts exactly two cycles.
             duration: 1400
             from: 0
             to: 1034
-            running: walk_timeline.enabled
+            running: false
             loops: Animation.Infinite
         }
         KeyframeGroup {
@@ -1869,44 +1877,84 @@ Node {
         }
     }
 
-    onActiveAnimationChanged: {
-        if (activeAnimation === "Walk") {
-            walk_timeline.currentFrame = 0
-            walkPlayer.restart()
-            console.log("Tiger Walk animation started")
-        }
-    }
-
     // Fallback gait for render backends that do not advance imported Timeline keyframes.
     // This still drives the rig's individual leg and tail bones, never the whole model.
     ParallelAnimation {
         id: fallbackWalkGait
-        running: node.activeAnimation === "Walk"
+        running: node.fallbackWalkEnabled
         loops: Animation.Infinite
 
         SequentialAnimation {
-            NumberAnimation { target: leg_front_L_upper; property: "eulerRotation.z"; to: 20; duration: 350; easing.type: Easing.InOutSine }
-            NumberAnimation { target: leg_front_L_upper; property: "eulerRotation.z"; to: -20; duration: 700; easing.type: Easing.InOutSine }
-            NumberAnimation { target: leg_front_L_upper; property: "eulerRotation.z"; to: 20; duration: 350; easing.type: Easing.InOutSine }
+            NumberAnimation { target: leg_front_L_upper; property: "eulerRotation.z"; to: 34; duration: 350; easing.type: Easing.InOutSine }
+            NumberAnimation { target: leg_front_L_upper; property: "eulerRotation.z"; to: -34; duration: 700; easing.type: Easing.InOutSine }
+            NumberAnimation { target: leg_front_L_upper; property: "eulerRotation.z"; to: 34; duration: 350; easing.type: Easing.InOutSine }
         }
         SequentialAnimation {
-            NumberAnimation { target: leg_front_R_upper; property: "eulerRotation.z"; to: -20; duration: 350; easing.type: Easing.InOutSine }
-            NumberAnimation { target: leg_front_R_upper; property: "eulerRotation.z"; to: 20; duration: 700; easing.type: Easing.InOutSine }
-            NumberAnimation { target: leg_front_R_upper; property: "eulerRotation.z"; to: -20; duration: 350; easing.type: Easing.InOutSine }
+            NumberAnimation { target: leg_front_R_upper; property: "eulerRotation.z"; to: -34; duration: 350; easing.type: Easing.InOutSine }
+            NumberAnimation { target: leg_front_R_upper; property: "eulerRotation.z"; to: 34; duration: 700; easing.type: Easing.InOutSine }
+            NumberAnimation { target: leg_front_R_upper; property: "eulerRotation.z"; to: -34; duration: 350; easing.type: Easing.InOutSine }
         }
         SequentialAnimation {
-            NumberAnimation { target: leg_back_L_upper; property: "eulerRotation.z"; to: -14; duration: 350; easing.type: Easing.InOutSine }
-            NumberAnimation { target: leg_back_L_upper; property: "eulerRotation.z"; to: 14; duration: 700; easing.type: Easing.InOutSine }
-            NumberAnimation { target: leg_back_L_upper; property: "eulerRotation.z"; to: -14; duration: 350; easing.type: Easing.InOutSine }
+            NumberAnimation { target: leg_back_L_upper; property: "eulerRotation.z"; to: -27; duration: 350; easing.type: Easing.InOutSine }
+            NumberAnimation { target: leg_back_L_upper; property: "eulerRotation.z"; to: 27; duration: 700; easing.type: Easing.InOutSine }
+            NumberAnimation { target: leg_back_L_upper; property: "eulerRotation.z"; to: -27; duration: 350; easing.type: Easing.InOutSine }
         }
         SequentialAnimation {
-            NumberAnimation { target: leg_back_R_upper; property: "eulerRotation.z"; to: 14; duration: 350; easing.type: Easing.InOutSine }
-            NumberAnimation { target: leg_back_R_upper; property: "eulerRotation.z"; to: -14; duration: 700; easing.type: Easing.InOutSine }
-            NumberAnimation { target: leg_back_R_upper; property: "eulerRotation.z"; to: 14; duration: 350; easing.type: Easing.InOutSine }
+            NumberAnimation { target: leg_back_R_upper; property: "eulerRotation.z"; to: 27; duration: 350; easing.type: Easing.InOutSine }
+            NumberAnimation { target: leg_back_R_upper; property: "eulerRotation.z"; to: -27; duration: 700; easing.type: Easing.InOutSine }
+            NumberAnimation { target: leg_back_R_upper; property: "eulerRotation.z"; to: 27; duration: 350; easing.type: Easing.InOutSine }
         }
         SequentialAnimation {
-            NumberAnimation { target: tail_01; property: "eulerRotation.y"; to: 7; duration: 700; easing.type: Easing.InOutSine }
-            NumberAnimation { target: tail_01; property: "eulerRotation.y"; to: -7; duration: 700; easing.type: Easing.InOutSine }
+            NumberAnimation { target: tail_01; property: "eulerRotation.y"; to: 14; duration: 700; easing.type: Easing.InOutSine }
+            NumberAnimation { target: tail_01; property: "eulerRotation.y"; to: -14; duration: 700; easing.type: Easing.InOutSine }
+        }
+    }
+
+    // Safe procedural jump: the legs tuck while rising and extend at the apex.
+    // It never runs with the walk gait because Pet.qml enables one state at a time.
+    ParallelAnimation {
+        id: fallbackJumpGait
+        running: node.fallbackJumpEnabled
+        loops: 1
+        SequentialAnimation {
+            NumberAnimation { target: leg_front_L_upper; property: "eulerRotation.z"; to: -55; duration: 220; easing.type: Easing.OutQuad }
+            NumberAnimation { target: leg_front_L_upper; property: "eulerRotation.z"; to: 42; duration: 250; easing.type: Easing.OutQuad }
+            NumberAnimation { target: leg_front_L_upper; property: "eulerRotation.z"; to: 0; duration: 250; easing.type: Easing.InOutSine }
+        }
+        SequentialAnimation {
+            NumberAnimation { target: leg_front_R_upper; property: "eulerRotation.z"; to: -55; duration: 220; easing.type: Easing.OutQuad }
+            NumberAnimation { target: leg_front_R_upper; property: "eulerRotation.z"; to: 42; duration: 250; easing.type: Easing.OutQuad }
+            NumberAnimation { target: leg_front_R_upper; property: "eulerRotation.z"; to: 0; duration: 250; easing.type: Easing.InOutSine }
+        }
+        SequentialAnimation {
+            NumberAnimation { target: leg_back_L_upper; property: "eulerRotation.z"; to: 48; duration: 220; easing.type: Easing.OutQuad }
+            NumberAnimation { target: leg_back_L_upper; property: "eulerRotation.z"; to: -38; duration: 250; easing.type: Easing.OutQuad }
+            NumberAnimation { target: leg_back_L_upper; property: "eulerRotation.z"; to: 0; duration: 250; easing.type: Easing.InOutSine }
+        }
+        SequentialAnimation {
+            NumberAnimation { target: leg_back_R_upper; property: "eulerRotation.z"; to: 48; duration: 220; easing.type: Easing.OutQuad }
+            NumberAnimation { target: leg_back_R_upper; property: "eulerRotation.z"; to: -38; duration: 250; easing.type: Easing.OutQuad }
+            NumberAnimation { target: leg_back_R_upper; property: "eulerRotation.z"; to: 0; duration: 250; easing.type: Easing.InOutSine }
+        }
+        SequentialAnimation {
+            NumberAnimation { target: leg_front_L_lower; property: "eulerRotation.z"; to: 58; duration: 220; easing.type: Easing.OutQuad }
+            NumberAnimation { target: leg_front_L_lower; property: "eulerRotation.z"; to: -42; duration: 250; easing.type: Easing.OutQuad }
+            NumberAnimation { target: leg_front_L_lower; property: "eulerRotation.z"; to: 0; duration: 250; easing.type: Easing.InOutSine }
+        }
+        SequentialAnimation {
+            NumberAnimation { target: leg_front_R_lower; property: "eulerRotation.z"; to: 58; duration: 220; easing.type: Easing.OutQuad }
+            NumberAnimation { target: leg_front_R_lower; property: "eulerRotation.z"; to: -42; duration: 250; easing.type: Easing.OutQuad }
+            NumberAnimation { target: leg_front_R_lower; property: "eulerRotation.z"; to: 0; duration: 250; easing.type: Easing.InOutSine }
+        }
+        SequentialAnimation {
+            NumberAnimation { target: leg_back_L_lower; property: "eulerRotation.z"; to: -52; duration: 220; easing.type: Easing.OutQuad }
+            NumberAnimation { target: leg_back_L_lower; property: "eulerRotation.z"; to: 38; duration: 250; easing.type: Easing.OutQuad }
+            NumberAnimation { target: leg_back_L_lower; property: "eulerRotation.z"; to: 0; duration: 250; easing.type: Easing.InOutSine }
+        }
+        SequentialAnimation {
+            NumberAnimation { target: leg_back_R_lower; property: "eulerRotation.z"; to: -52; duration: 220; easing.type: Easing.OutQuad }
+            NumberAnimation { target: leg_back_R_lower; property: "eulerRotation.z"; to: 38; duration: 250; easing.type: Easing.OutQuad }
+            NumberAnimation { target: leg_back_R_lower; property: "eulerRotation.z"; to: 0; duration: 250; easing.type: Easing.InOutSine }
         }
     }
 

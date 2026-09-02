@@ -3,21 +3,21 @@ import QtQuick.Window
 import QtQuick.Controls
 
 Window {
-    id: root; width: 360; height: 330; color: "transparent"; visible: applicationController.petVisible
+    id: root; width: 360; height: 400; color: "transparent"; visible: applicationController.petVisible
     property bool developerPanelVisible: false
+    property int movementDuration: applicationController.pet.state === "ChasingMouse" ? 1100 : 2800
     Item { id: keyHandler; anchors.fill: parent; focus: true
         Keys.onPressed: function(event) { if (event.key === Qt.Key_F12) { root.developerPanelVisible = !root.developerPanelVisible; event.accepted = true } }
     }
     flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool
-    Behavior on x { NumberAnimation { duration: 2800; easing.type: Easing.InOutSine } }
-    Behavior on y { NumberAnimation { duration: 2800; easing.type: Easing.InOutSine } }
-    Pet { id: pet; x: 45; y: 55; width: 270; height: 270; stateName: applicationController.pet.state }
+    Behavior on x { NumberAnimation { duration: root.movementDuration; easing.type: Easing.InOutSine } }
+    Behavior on y { NumberAnimation { duration: root.movementDuration; easing.type: Easing.InOutSine } }
+    Pet { id: pet; x: 45; y: 115; width: 270; height: 270; stateName: applicationController.pet.state }
     SpeechBubble {
         id: speech
         anchors.horizontalCenter: parent.horizontalCenter
-        // The 3D tiger's head renders in the lower part of Pet's viewport.
-        anchors.bottom: pet.bottom
-        anchors.bottomMargin: 110
+        anchors.bottom: pet.top
+        anchors.bottomMargin: 4
         message: applicationController.pet.dialogue
         visible: showing
     }
@@ -27,11 +27,28 @@ Window {
     Connections {
         target: applicationController
         function onMovementTargetChanged(x, y) {
-            if (Math.abs(x - root.x) > 8)
-                pet.facingRight = x > root.x
+            // Turn along the actual 2D desktop movement vector. This covers
+            // left/right, up/down, and diagonal mouse following.
+            const dx = x - root.x
+            const dy = y - root.y
+            if (Math.abs(dx) + Math.abs(dy) > 16) {
+                pet.heading = Math.atan2(dy, dx) * 180 / Math.PI
+                pet.facingRight = dx >= 0
+            }
+            pet.dialogueRunning = true
+            dialogueRunTimer.restart()
             root.x = x
             root.y = y
         }
+        function onPerchWindowMoved() {
+            pet.tailWag = true
+        }
+    }
+    Timer {
+        id: dialogueRunTimer
+        interval: 2900
+        repeat: false
+        onTriggered: pet.dialogueRunning = false
     }
     MouseArea { anchors.fill: parent; acceptedButtons: Qt.LeftButton
         property real pressX

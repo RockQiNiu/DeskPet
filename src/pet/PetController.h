@@ -14,5 +14,10 @@ public: explicit PetController(QObject *parent = nullptr);
     Q_INVOKABLE void triggerBuildFailures(int count);
     Q_INVOKABLE void resetBuildFailures();
 signals: void stateChanged(); void transitionLogged(QString message); void dialogueChanged(); void buildFailureCountChanged();
-private: PetStateMachine m_machine; QString m_dialogue; int m_buildFailures = 0;
+private:
+    PetStateMachine m_machine;
+    QString m_dialogue;
+    int m_buildFailures = 0;
+    qint64 m_criticalUntilMs = 0;
+    qint64 m_buildFailureUntilMs = 0;
 };

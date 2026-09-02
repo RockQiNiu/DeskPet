@@ -5,23 +5,22 @@ import "assets/tiger/generated3d" as TigerModel
 Item {
     id: root
     property string stateName: "Idle"
-    property bool walking: stateName === "Walking" || stateName === "Running" || stateName === "ChasingMouse" || stateName === "AvoidingMouse"
+    property bool dialogueRunning: false
+    property bool walking: dialogueRunning || stateName === "Walking" || stateName === "Running" || stateName === "ChasingMouse" || stateName === "AvoidingMouse"
     property bool celebrating: stateName === "Celebrating"
     property bool smoking: stateName === "Smoking"
     property bool sleeping: stateName === "Sleeping"
     property bool dead: stateName === "Dead"
     property bool jumping: stateName === "Jumping"
+    property bool perching: stateName === "Perching"
+    property bool tailWag: false
     property bool facingRight: true
-    property string animationName: {
-        if (dead) return "Dead"
-        if (sleeping) return "Sleep"
-        if (celebrating) return "Celebrate"
-        if (jumping) return "Jump"
-        if (walking) return "Walk"
-        if (stateName === "Working") return "Idle"
-        if (stateName === "Angry") return "Idle"
-        return "Idle"
-    }
+    // Screen-plane heading in degrees: 0=right, 90=down, 180=left, -90=up.
+    property real heading: 0
+    // This rig's generated Qt 6.9 Timeline player crashes even on its Idle
+    // clip on this machine.  An empty name keeps every imported Timeline
+    // disabled while leaving the 3D tiger visible and desktop movement intact.
+    property string animationName: ""
 
     View3D {
         anchors.fill: parent
@@ -39,7 +38,7 @@ Item {
             id: cat
             y: root.dead ? -0.35 : (root.sleeping ? -0.16 : 0)
             // The rig's forward axis is -Z. ±90° maps that direction to the desktop X axis.
-            eulerRotation.y: root.facingRight ? -90 : 90
+            eulerRotation.y: root.heading
             eulerRotation.z: root.dead ? 90 : (root.sleeping ? 12 : 0)
             scale: Qt.vector3d(1.35, 1.35, 1.35)
             Behavior on eulerRotation.y {
@@ -51,6 +50,8 @@ Item {
                 TigerModel.Tiger_rigged {
                     id: tigerAsset
                     activeAnimation: root.animationName
+                    fallbackWalkEnabled: root.walking
+                    fallbackJumpEnabled: root.jumping
                 }
             }
 
@@ -60,19 +61,74 @@ Item {
             Model { visible: root.celebrating; source: "#Cube"; scale: Qt.vector3d(0.07, 0.18, 0.04); position: Qt.vector3d(1.0, 0.7, 0); eulerRotation.z: -30; materials: PrincipledMaterial { baseColor: "#7ad7ff"; emissiveFactor: Qt.vector3d(0,0.2,0.4) } }
         }
 
-        SequentialAnimation { running: root.jumping; loops: Animation.Infinite
-            NumberAnimation { target: cat; property: "y"; to: 0.48; duration: 280; easing.type: Easing.OutQuad }
-            NumberAnimation { target: cat; property: "y"; to: 0; duration: 320; easing.type: Easing.InQuad }
+    }
+
+    // A 2D overlay deliberately keeps smoke visible regardless of the imported
+    // glTF model's camera framing. It rises from the tiger's head and fades out.
+    Item {
+        id: smokeOverlay
+        anchors.fill: parent
+        visible: root.smoking
+        z: 10
+        Repeater {
+            model: 5
+            delegate: Item {
+                id: puff
+                property real baseX: 112 + (index % 3) * 22
+                width: 46 + (index % 2) * 12
+                height: width
+                x: baseX
+                y: 66 + (index % 2) * 15
+                opacity: 0
+                Rectangle {
+                    anchors.centerIn: parent
+                    width: parent.width
+                    height: parent.height
+                    radius: width / 2
+                    color: index % 2 ? "#9ba6b2" : "#c4ccd4"
+                    opacity: 0.78
+                    border.width: 1
+                    border.color: "#e2e7eb"
+                }
+                SequentialAnimation on opacity {
+                    running: root.smoking
+                    loops: Animation.Infinite
+                    PauseAnimation { duration: index * 330 }
+                    NumberAnimation { to: 0.78; duration: 300 }
+                    PauseAnimation { duration: 300 }
+                    NumberAnimation { to: 0; duration: 620 }
+                }
+                SequentialAnimation on y {
+                    running: root.smoking
+                    loops: Animation.Infinite
+                    PauseAnimation { duration: index * 330 }
+                    NumberAnimation { to: 8 + index * 4; duration: 1220; easing.type: Easing.OutQuad }
+                    PropertyAction { value: 66 + (index % 2) * 15 }
+                }
+                SequentialAnimation on x {
+                    running: root.smoking
+                    loops: Animation.Infinite
+                    PauseAnimation { duration: index * 330 }
+                    NumberAnimation { to: baseX + (index % 2 ? 18 : -16); duration: 640; easing.type: Easing.InOutSine }
+                    NumberAnimation { to: baseX; duration: 580; easing.type: Easing.InOutSine }
+                }
+            }
         }
-        SequentialAnimation { running: root.walking; loops: Animation.Infinite
-            ParallelAnimation {
-                NumberAnimation { target: tigerMotion; property: "y"; to: 0.10; duration: 210; easing.type: Easing.OutQuad }
-                NumberAnimation { target: tigerMotion; property: "eulerRotation.z"; to: -4; duration: 210; easing.type: Easing.OutQuad }
-            }
-            ParallelAnimation {
-                NumberAnimation { target: tigerMotion; property: "y"; to: 0; duration: 210; easing.type: Easing.InQuad }
-                NumberAnimation { target: tigerMotion; property: "eulerRotation.z"; to: 4; duration: 210; easing.type: Easing.InQuad }
-            }
+        Text {
+            anchors.horizontalCenter: parent.horizontalCenter
+            y: 8
+            text: "🔥"
+            font.pixelSize: 28
+            opacity: 0.92
+        }
+
+        // Move the outer model node, not an internal imported node. This makes
+        // the lift visible regardless of the rig's local coordinate origin.
+        SequentialAnimation {
+            running: root.jumping
+            loops: 1
+            NumberAnimation { target: cat; property: "y"; to: 0.62; duration: 280; easing.type: Easing.OutQuad }
+            NumberAnimation { target: cat; property: "y"; to: 0; duration: 440; easing.type: Easing.InQuad }
         }
     }
 

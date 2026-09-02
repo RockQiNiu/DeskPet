@@ -7,6 +7,7 @@ class ActivityMonitor : public QObject {
     Q_OBJECT
 public:
     explicit ActivityMonitor(QObject *parent = nullptr);
+    bool ideActive() const { return m_ideActive; }
 signals:
     void ideFocused(const QString &application, const QString &title);
     void ideFocusLost();

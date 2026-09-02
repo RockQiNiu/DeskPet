@@ -1,0 +1,40 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 18
+VisualStudioVersion = 18.0.0.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BuildFailureTrigger", "BuildFailureTrigger\BuildFailureTrigger.vcxproj", "{A4B917C0-0B4A-4202-9651-3D2B0E91A101}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CpuStressTrigger", "CpuStressTrigger\CpuStressTrigger.vcxproj", "{A4B917C0-0B4A-4202-9651-3D2B0E91A102}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CrashTrigger", "CrashTrigger\CrashTrigger.vcxproj", "{A4B917C0-0B4A-4202-9651-3D2B0E91A103}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		FailBuild|x64 = FailBuild|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A4B917C0-0B4A-4202-9651-3D2B0E91A101}.Debug|x64.ActiveCfg = Debug|x64
+		{A4B917C0-0B4A-4202-9651-3D2B0E91A101}.Debug|x64.Build.0 = Debug|x64
+		{A4B917C0-0B4A-4202-9651-3D2B0E91A101}.FailBuild|x64.ActiveCfg = FailBuild|x64
+		{A4B917C0-0B4A-4202-9651-3D2B0E91A101}.FailBuild|x64.Build.0 = FailBuild|x64
+		{A4B917C0-0B4A-4202-9651-3D2B0E91A101}.Release|x64.ActiveCfg = Release|x64
+		{A4B917C0-0B4A-4202-9651-3D2B0E91A101}.Release|x64.Build.0 = Release|x64
+		{A4B917C0-0B4A-4202-9651-3D2B0E91A102}.Debug|x64.ActiveCfg = Debug|x64
+		{A4B917C0-0B4A-4202-9651-3D2B0E91A102}.Debug|x64.Build.0 = Debug|x64
+		{A4B917C0-0B4A-4202-9651-3D2B0E91A102}.FailBuild|x64.ActiveCfg = Release|x64
+		{A4B917C0-0B4A-4202-9651-3D2B0E91A102}.FailBuild|x64.Build.0 = Release|x64
+		{A4B917C0-0B4A-4202-9651-3D2B0E91A102}.Release|x64.ActiveCfg = Release|x64
+		{A4B917C0-0B4A-4202-9651-3D2B0E91A102}.Release|x64.Build.0 = Release|x64
+		{A4B917C0-0B4A-4202-9651-3D2B0E91A103}.Debug|x64.ActiveCfg = Debug|x64
+		{A4B917C0-0B4A-4202-9651-3D2B0E91A103}.Debug|x64.Build.0 = Debug|x64
+		{A4B917C0-0B4A-4202-9651-3D2B0E91A103}.FailBuild|x64.ActiveCfg = Release|x64
+		{A4B917C0-0B4A-4202-9651-3D2B0E91A103}.FailBuild|x64.Build.0 = Release|x64
+		{A4B917C0-0B4A-4202-9651-3D2B0E91A103}.Release|x64.ActiveCfg = Release|x64
+		{A4B917C0-0B4A-4202-9651-3D2B0E91A103}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

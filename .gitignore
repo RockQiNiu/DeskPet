@@ -2,3 +2,6 @@ build/
 .cache/
 *.user
 *.autosave
+.qtcreator/
+tests/visual-studio/**/x64/
+tests/visual-studio/**/.vs/

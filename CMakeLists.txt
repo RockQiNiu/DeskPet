@@ -31,6 +31,10 @@ qt_add_executable(DeskPet
     src/monitor/SystemMonitor.cpp
     src/monitor/ActivityMonitor.h
     src/monitor/ActivityMonitor.cpp
+    src/monitor/BuildMonitor.h
+    src/monitor/BuildMonitor.cpp
+    src/monitor/ProcessMonitor.h
+    src/monitor/ProcessMonitor.cpp
 )
 
 file(GLOB_RECURSE CAT_3D_RESOURCES CONFIGURE_DEPENDS
@@ -45,6 +49,9 @@ list(REMOVE_ITEM TIGER_3D_RESOURCES
     "qml/assets/tiger/generated3d/Tiger_rigged.qml")
 
 qt_add_qml_module(DeskPet URI DeskPet VERSION 1.0
+    # Complex generated Quick3D rig QML is more stable interpreted than AOT
+    # compiled on Qt 6.9.3/MSVC. This avoids Qt6Qmld access violations.
+    NO_CACHEGEN
     QML_FILES
         qml/Main.qml
         qml/Pet.qml
