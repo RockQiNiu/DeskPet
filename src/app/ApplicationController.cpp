@@ -80,6 +80,43 @@ void ApplicationController::pollDesktopInteraction()
     const bool desktop = window == GetDesktopWindow() || windowClass == "Progman" || windowClass == "WorkerW";
     const qint64 now = QDateTime::currentMSecsSinceEpoch();
 
+    // A restored foreground window is a virtual platform. Do this before the
+    // active-work early return so the pet visibly rests on the window the user
+    // is using. Maximized, minimized, desktop and our own windows never act
+    // as platforms.
+    struct Candidate { HWND handle = nullptr; RECT rect{}; } candidate;
+    if (!desktop && !ownWindow && IsWindowVisible(window) && !IsIconic(window) && !IsZoomed(window)) {
+        RECT rect{};
+        if (GetWindowRect(window, &rect) && rect.right - rect.left >= 250 && rect.bottom - rect.top >= 180) {
+            candidate.handle = window;
+            candidate.rect = rect;
+        }
+    }
+    if (candidate.handle) {
+        const bool moved = m_perchedWindow == candidate.handle
+            && (m_perchedLeft != candidate.rect.left || m_perchedTop != candidate.rect.top
+                || m_perchedRight != candidate.rect.right || m_perchedBottom != candidate.rect.bottom);
+        m_perchedWindow = candidate.handle;
+        m_perchedLeft = candidate.rect.left; m_perchedTop = candidate.rect.top;
+        m_perchedRight = candidate.rect.right; m_perchedBottom = candidate.rect.bottom;
+        // Pet.qml places the visible sprite's feet at y=385 in its 400px host window.
+        moveTo(candidate.rect.left + (candidate.rect.right - candidate.rect.left - 360) / 2,
+               candidate.rect.top - 385);
+        // An editor remains a virtual platform, but active code editing takes
+        // priority over the static sitting pose. Avoid retriggering "coding"
+        // every poll because that would restart its speech clip repeatedly.
+        if (m_activityMonitor.ideActive()) {
+            if (m_pet.state() != "Working") {
+                m_pet.trigger("coding");
+                m_lastCodingMs = now;
+            }
+        } else {
+            m_pet.trigger("perch");
+        }
+        if (moved) emit perchWindowMoved();
+        return;
+    }
+
     // A short idle interval is deliberately used here: no key values are read
     // or stored, only the Windows last-input timestamp.
     // CPU high needs three consecutive one-second samples. Keep the input
@@ -95,7 +132,7 @@ void ApplicationController::pollDesktopInteraction()
         // straightforward to test by changing Windows time.  The reminder is
         // intentionally rate limited to one notification every 30 minutes.
         const QTime time = QTime::currentTime();
-        if (m_activityMonitor.ideActive() && time.hour() >= 2 && time.hour() < 6
+        if (m_activityMonitor.ideActive() && time.hour() >= 1 && time.hour() < 6
             && now - m_lastLateNightMs >= 30 * 60 * 1000) {
             m_pet.trigger("sleep");
             m_lastLateNightMs = now;
@@ -132,33 +169,6 @@ void ApplicationController::pollDesktopInteraction()
             if (m_pet.state() == "ChasingMouse")
                 m_pet.trigger("idle");
         });
-        return;
-    }
-
-    // Keep this GUI-thread polling path deliberately simple. Enumerating every
-    // native window here caused a QtCore access violation on this machine.
-    // A normal foreground application still supports perching and following;
-    // background-window selection belongs in a separate native worker.
-    struct Candidate { HWND handle = nullptr; RECT rect{}; } candidate;
-    if (!desktop && !ownWindow && IsWindowVisible(window) && !IsIconic(window) && !IsZoomed(window)) {
-        RECT rect{};
-        if (GetWindowRect(window, &rect) && rect.right - rect.left >= 250 && rect.bottom - rect.top >= 180) {
-            candidate.handle = window;
-            candidate.rect = rect;
-        }
-    }
-
-    if (candidate.handle && (idleMs >= 1800 || m_perchedWindow == candidate.handle)) {
-        const bool moved = m_perchedWindow == candidate.handle
-            && (m_perchedLeft != candidate.rect.left || m_perchedTop != candidate.rect.top
-                || m_perchedRight != candidate.rect.right || m_perchedBottom != candidate.rect.bottom);
-        m_perchedWindow = candidate.handle;
-        m_perchedLeft = candidate.rect.left; m_perchedTop = candidate.rect.top;
-        m_perchedRight = candidate.rect.right; m_perchedBottom = candidate.rect.bottom;
-        m_pet.trigger("perch");
-        moveTo(candidate.rect.left + (candidate.rect.right - candidate.rect.left - 360) / 2,
-               candidate.rect.top - 395);
-        if (moved) emit perchWindowMoved();
         return;
     }
 

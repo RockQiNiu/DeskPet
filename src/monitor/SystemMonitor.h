@@ -16,7 +16,7 @@ private slots:
 private:
     QTimer m_timer;
     WindowsSystemProvider m_provider;
-    double m_threshold = 70;
+    double m_threshold = 80;
     int m_highSamples = 0;
     int m_normalSamples = 0;
     bool m_high = false;

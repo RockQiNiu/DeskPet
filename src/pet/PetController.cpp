@@ -43,6 +43,17 @@ void PetController::trigger(QString name) {
     if (!silent) {
         DialogueManager d; QString key = name == "coding" ? "coding" : name == "commit" ? "git_commit" : name == "cpu" ? "high_cpu" : name == "crash" ? "program_crash" : name == "success" ? "build_success" : name == "failed" ? "build_failed" : "late_night";
         m_dialogue = d.forEvent(key, m_buildFailures); emit dialogueChanged();
+
+        // ASCII names make Qt resource URLs reliable. Incrementing the
+        // sequence retriggers the clip even when failure five repeats.
+        if (name == "coding") m_audioFile = "coding.mp3";
+        else if (name == "success") m_audioFile = "build_success.mp3";
+        else if (name == "failed") m_audioFile = QString("build_failed_%1.mp3").arg(qBound(1, m_buildFailures, 5), 2, 10, QLatin1Char('0'));
+        else if (name == "sleep") m_audioFile = "late_night.mp3";
+        else if (name == "crash") m_audioFile = "mama.mp3";
+        else m_audioFile.clear();
+        ++m_audioSequence;
+        emit audioCueChanged();
     }
 }
 void PetController::triggerBuildFailures(int count) { for (int i = 0; i < count; ++i) trigger("failed"); }

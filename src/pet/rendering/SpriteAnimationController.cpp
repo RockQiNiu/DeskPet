@@ -33,7 +33,9 @@ QString SpriteAnimationController::animationForState(const QString &stateName)
 {
     static const QHash<QString, QString> mapping {
         {"Idle", "idle"}, {"Walking", "walk"}, {"Running", "run"}, {"Jumping", "jump"},
-        {"Working", "idle"}, {"Happy", "happy"}, {"Angry", "angry"},
+        // While the user edits code, the pet walks in place in the normal
+        // looping walk cycle rather than falling back to the idle pose.
+        {"Working", "walk"}, {"Happy", "happy"}, {"Angry", "angry"},
         {"Sleeping", "sleep"}, {"Sleepy", "sleep"}, {"Smoking", "idle"},
         {"Celebrating", "celebrate"}, {"Dead", "dead"}, {"Perching", "sit"},
         {"Dragging", "idle"}, {"ChasingMouse", "run"}, {"AvoidingMouse", "run"},

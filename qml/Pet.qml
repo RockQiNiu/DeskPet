@@ -1,4 +1,5 @@
 import QtQuick
+import QtMultimedia
 
 Item {
     id: root
@@ -8,12 +9,31 @@ Item {
     property bool smoking: stateName === "Smoking"
     property bool jumping: stateName === "Jumping"
 
+    MediaPlayer {
+        id: voicePlayer
+        audioOutput: AudioOutput { volume: 1.0 }
+    }
+
     function refreshAnimation() {
         spriteController.setPetState(stateName)
     }
-    onStateNameChanged: refreshAnimation()
+    onStateNameChanged: {
+        refreshAnimation()
+    }
     onDialogueRunningChanged: refreshAnimation()
     Component.onCompleted: refreshAnimation()
+
+    Connections {
+        target: applicationController.pet
+        function onAudioCueChanged() {
+            const fileName = applicationController.pet.audioFile
+            if (fileName === "")
+                return
+            voicePlayer.stop()
+            voicePlayer.source = "qrc:/qt/qml/DeskPet/assets/audio/" + fileName
+            voicePlayer.play()
+        }
+    }
 
     // Foot anchor: bottom-centre. All Mage2D assets share a 512x512 canvas.
     Image {
@@ -44,6 +64,19 @@ Item {
         NumberAnimation { to: 0; duration: 400; easing.type: Easing.InQuad }
     }
 
+    SequentialAnimation on scale {
+        running: root.stateName === "Happy"; loops: 1
+        NumberAnimation { to: 1.12; duration: 140 }
+        NumberAnimation { to: 0.94; duration: 140 }
+        NumberAnimation { to: 1.0; duration: 180 }
+    }
+    SequentialAnimation on rotation {
+        running: root.stateName === "Dead"; loops: 3
+        NumberAnimation { to: -7; duration: 55 }
+        NumberAnimation { to: 7; duration: 55 }
+        NumberAnimation { to: 0; duration: 55 }
+    }
+
     // State-independent CPU-high overlay effect.
     Item {
         visible: root.smoking
@@ -70,3 +103,6 @@ Item {
         }
     }
 }
+
+
+
