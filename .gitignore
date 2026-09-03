@@ -3,5 +3,7 @@ build/
 *.user
 *.autosave
 .qtcreator/
+output/
+assets/pets/mage2d/previews/*.gif
 tests/visual-studio/**/x64/
 tests/visual-studio/**/.vs/

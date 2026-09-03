@@ -17,8 +17,9 @@ void PetStateMachine::dispatch(PetEventType event)
     case PetEventType::MouseLeaving: next = PetState::ChasingMouse; break;
     case PetEventType::UserDraggingPet: next = PetState::Dragging; break;
     case PetEventType::JumpRequested: next = PetState::Jumping; break;
+    case PetEventType::WaveRequested: next = PetState::Waving; break;
     case PetEventType::PerchRequested: next = PetState::Perching; break;
-    case PetEventType::WindowDragRequested: next = PetState::Dragging; break;
+    case PetEventType::WindowDragRequested: next = PetState::WindowDragging; break;
     case PetEventType::CpuNormal: next = PetState::Idle; break;
     }
     if (next == m_state) return;

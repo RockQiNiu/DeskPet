@@ -5,6 +5,9 @@ import QtQuick.Controls
 Window {
     id: root; width: 360; height: 400; color: "transparent"; visible: applicationController.petVisible
     property bool developerPanelVisible: false
+    property bool reviewRunning: false
+    property int reviewIndex: 0
+    property var reviewItems: ["idle", "walk", "run", "jump", "sit", "wave", "sleep", "celebrate", "angry", "happy", "crash"]
     property int movementDuration: applicationController.pet.state === "ChasingMouse" ? 1100 : 2800
     Item { id: keyHandler; anchors.fill: parent; focus: true
         Keys.onPressed: function(event) { if (event.key === Qt.Key_F12) { root.developerPanelVisible = !root.developerPanelVisible; event.accepted = true } }
@@ -27,12 +30,10 @@ Window {
     Connections {
         target: applicationController
         function onMovementTargetChanged(x, y) {
-            // Turn along the actual 2D desktop movement vector. This covers
-            // left/right, up/down, and diagonal mouse following.
+            // Mage2D frames are authored facing right. Left movement mirrors
+            // the same PNG sequence; vertical-only movement preserves facing.
             const dx = x - root.x
-            const dy = y - root.y
-            if (Math.abs(dx) + Math.abs(dy) > 16) {
-                pet.heading = Math.atan2(dy, dx) * 180 / Math.PI
+            if (Math.abs(dx) > 16) {
                 pet.facingRight = dx >= 0
             }
             pet.dialogueRunning = true
@@ -40,15 +41,38 @@ Window {
             root.x = x
             root.y = y
         }
-        function onPerchWindowMoved() {
-            pet.tailWag = true
-        }
     }
     Timer {
         id: dialogueRunTimer
         interval: 2900
         repeat: false
         onTriggered: pet.dialogueRunning = false
+    }
+    Timer {
+        id: reviewTimer
+        repeat: false
+        onTriggered: {
+            if (!root.reviewRunning)
+                return
+            if (root.reviewIndex >= root.reviewItems.length) {
+                root.reviewRunning = false
+                return
+            }
+            const eventName = root.reviewItems[root.reviewIndex]
+            applicationController.pet.trigger(eventName)
+            root.reviewIndex += 1
+            // Looping animations are reviewed for two seconds; one-shot clips
+            // run once, then leave a short inspection pause before the next.
+            const oneShot = eventName === "jump" || eventName === "wave" || eventName === "celebrate" || eventName === "crash"
+            interval = oneShot ? 1800 : 2500
+            start()
+        }
+    }
+    Connections {
+        target: spriteController
+        function onAnimationFinished(animation) {
+            applicationController.pet.completeAnimation(animation)
+        }
     }
     MouseArea { anchors.fill: parent; acceptedButtons: Qt.LeftButton
         property real pressX
@@ -58,10 +82,17 @@ Window {
             if (pressed) { root.x += mouse.x - pressX; root.y += mouse.y - pressY }
         }
     }
-    Rectangle { visible: root.developerPanelVisible; x: 185; y: -40; width: 230; height: 300; radius: 10; color: "#ee20252f"; border.color: "#7090b0"
+    Rectangle { visible: root.developerPanelVisible; x: 12; y: 12; width: 336; height: 376; radius: 10; color: "#ee20252f"; border.color: "#7090b0"
         Column { anchors.fill: parent; anchors.margins: 10; spacing: 5
             Text { text: "Developer Panel (F12)"; color: "white" }
-            Text { text: "State: " + applicationController.pet.state + "\nBuild failures: " + applicationController.pet.buildFailureCount; color: "#b8c7d9" }
+            Text { text: "PetState: " + applicationController.pet.state + "\nAnimation: " + spriteController.currentAnimation + "\nFrame: " + spriteController.currentFrame + " / " + spriteController.frameCount + "\nFPS: " + spriteController.fps + "   Loop: " + spriteController.loop + "\nBuild failures: " + applicationController.pet.buildFailureCount; color: "#b8c7d9" }
+            Text { text: "2D Sprite Animation Test"; color: "#f5c86e" }
+            Grid { columns: 4; spacing: 4
+                Repeater { model: [ ["Idle", "idle"], ["Walk", "walk"], ["Run", "run"], ["Jump", "jump"], ["Sit", "sit"], ["Wave", "wave"], ["Sleep", "sleep"], ["Celebrate", "commit"], ["Dead", "crash"], ["Angry", "failed"], ["Happy", "success"] ]
+                    delegate: Button { required property var modelData; text: modelData[0]; onClicked: applicationController.pet.trigger(modelData[1]) }
+                }
+            }
+            Button { text: root.reviewRunning ? "Stop Animation Review" : "Start Animation Review"; onClicked: { root.reviewRunning = !root.reviewRunning; if (root.reviewRunning) { root.reviewIndex = 0; reviewTimer.start() } else reviewTimer.stop() } }
             Button { text: "UserCoding"; onClicked: applicationController.pet.trigger("coding") }
             Button { text: "BuildFailed x1"; onClicked: applicationController.pet.trigger("failed") }
             Button { text: "BuildFailed x17"; onClicked: applicationController.pet.triggerBuildFailures(17) }

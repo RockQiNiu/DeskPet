@@ -26,7 +26,7 @@ ApplicationController::ApplicationController(QObject *p) : QObject(p), m_tray(th
     connect(&m_processMonitor, &ProcessMonitor::processCrashed, this, [this](const QString &, unsigned long) { m_pet.trigger("crash"); });
     connect(&m_movement, &DesktopMovementController::targetChanged, this, &ApplicationController::movementTargetChanged);
     connect(&m_pet, &PetController::dialogueChanged, this, [this] { m_movement.chooseTarget(); });
-    QIcon icon(QStringLiteral(":/qt/qml/DeskPet/assets/pets/cat/cat.svg"));
+    QIcon icon(QStringLiteral(":/qt/qml/DeskPet/assets/pets/mage2d/idle/idle_0001.png"));
     if (icon.isNull()) { QPixmap fallback(32, 32); fallback.fill(QColor("#ef8f5b")); icon = QIcon(fallback); }
     m_tray.setIcon(icon); m_tray.setToolTip(QStringLiteral("ProgrammerPet"));
     m_toggleAction = m_trayMenu.addAction(QStringLiteral("Show / Hide Pet"));

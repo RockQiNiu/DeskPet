@@ -1,6 +1,8 @@
 add_executable(ProgrammerPetTests
     EventBusTest.cpp
     ../src/core/EventBus.h
+    ../src/pet/rendering/SpriteAnimationController.cpp
+    ../src/pet/rendering/SpriteAnimationController.h
     ../src/dialogue/DialogueManager.cpp
     ../src/dialogue/DialogueManager.h
 )

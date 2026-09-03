@@ -2,7 +2,8 @@
 #include <QString>
 
 enum class PetState { Idle, Walking, Running, Jumping, Sleeping, Working, Happy, Angry,
-                      Smoking, Celebrating, Dead, Perching, Dragging, ChasingMouse, AvoidingMouse };
+                      Smoking, Celebrating, Dead, Perching, Dragging, ChasingMouse, AvoidingMouse,
+                      Waving, WindowDragging };
 
 inline QString petStateName(PetState state)
 {
@@ -14,6 +15,7 @@ inline QString petStateName(PetState state)
     case PetState::Celebrating: return "Celebrating"; case PetState::Dead: return "Dead";
     case PetState::Perching: return "Perching";
     case PetState::Dragging: return "Dragging"; case PetState::ChasingMouse: return "ChasingMouse";
-    case PetState::AvoidingMouse: return "AvoidingMouse"; default: return "Idle";
+    case PetState::AvoidingMouse: return "AvoidingMouse"; case PetState::Waving: return "Waving";
+    case PetState::WindowDragging: return "WindowDragging"; default: return "Idle";
     }
 }

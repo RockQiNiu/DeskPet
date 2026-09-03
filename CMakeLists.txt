@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Quick Quick3D Widgets Svg Test)
+find_package(Qt6 REQUIRED COMPONENTS Quick Widgets Svg Test)
 qt_policy(SET QTP0001 NEW)
 qt_policy(SET QTP0004 NEW)
 
@@ -19,6 +19,8 @@ qt_add_executable(DeskPet
     src/pet/PetEvent.h
     src/pet/PetStateMachine.cpp
     src/pet/PetStateMachine.h
+    src/pet/rendering/SpriteAnimationController.cpp
+    src/pet/rendering/SpriteAnimationController.h
     src/interaction/DesktopMovementController.cpp
     src/interaction/DesktopMovementController.h
     src/core/EventBus.h
@@ -37,16 +39,9 @@ qt_add_executable(DeskPet
     src/monitor/ProcessMonitor.cpp
 )
 
-file(GLOB_RECURSE CAT_3D_RESOURCES CONFIGURE_DEPENDS
+file(GLOB_RECURSE MAGE2D_RESOURCES CONFIGURE_DEPENDS
     RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
-    "${CMAKE_CURRENT_SOURCE_DIR}/qml/assets/cat/generated3d/*")
-list(REMOVE_ITEM CAT_3D_RESOURCES
-    "qml/assets/cat/generated3d/Programmer_cat.qml")
-file(GLOB_RECURSE TIGER_3D_RESOURCES CONFIGURE_DEPENDS
-    RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
-    "${CMAKE_CURRENT_SOURCE_DIR}/qml/assets/tiger/generated3d/*")
-list(REMOVE_ITEM TIGER_3D_RESOURCES
-    "qml/assets/tiger/generated3d/Tiger_rigged.qml")
+    "${CMAKE_CURRENT_SOURCE_DIR}/assets/pets/mage2d/*.png")
 
 qt_add_qml_module(DeskPet URI DeskPet VERSION 1.0
     # Complex generated Quick3D rig QML is more stable interpreted than AOT
@@ -56,18 +51,11 @@ qt_add_qml_module(DeskPet URI DeskPet VERSION 1.0
         qml/Main.qml
         qml/Pet.qml
         qml/SpeechBubble.qml
-        qml/assets/cat/generated3d/Programmer_cat.qml
-        qml/assets/tiger/generated3d/Tiger_rigged.qml
     RESOURCES
-        assets/pets/cat/cat.svg
-        assets/pets/cat/programmer_cat.glb
-        assets/pets/cat/tiger.glb
-        assets/pets/cat/tiger_rigged.glb
-        ${CAT_3D_RESOURCES}
-        ${TIGER_3D_RESOURCES}
+        ${MAGE2D_RESOURCES}
 )
 
-target_link_libraries(DeskPet PRIVATE Qt6::Quick Qt6::Quick3D Qt6::Widgets Qt6::Svg)
+target_link_libraries(DeskPet PRIVATE Qt6::Quick Qt6::Widgets Qt6::Svg)
 target_include_directories(DeskPet PRIVATE src)
 enable_testing()
 add_subdirectory(tests)

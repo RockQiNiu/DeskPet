@@ -1,6 +1,7 @@
 #pragma once
 #include <QObject>
 #include "PetStateMachine.h"
+#include "../core/EventBus.h"
 class PetController : public QObject {
     Q_OBJECT Q_PROPERTY(QString state READ state NOTIFY stateChanged)
     Q_PROPERTY(QString dialogue READ dialogue NOTIFY dialogueChanged)
@@ -13,8 +14,10 @@ public: explicit PetController(QObject *parent = nullptr);
     Q_INVOKABLE void returnToIdleIfWorking();
     Q_INVOKABLE void triggerBuildFailures(int count);
     Q_INVOKABLE void resetBuildFailures();
+    Q_INVOKABLE void completeAnimation(const QString &animation);
 signals: void stateChanged(); void transitionLogged(QString message); void dialogueChanged(); void buildFailureCountChanged();
 private:
+    EventBus m_eventBus;
     PetStateMachine m_machine;
     QString m_dialogue;
     int m_buildFailures = 0;

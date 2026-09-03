@@ -2,6 +2,7 @@
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include "app/ApplicationController.h"
+#include "pet/rendering/SpriteAnimationController.h"
 
 int main(int argc, char *argv[])
 {
@@ -13,8 +14,10 @@ int main(int argc, char *argv[])
     app.setOrganizationName("DeskPet");
 
     ApplicationController controller;
+    SpriteAnimationController spriteController;
     QQmlApplicationEngine engine;
     engine.rootContext()->setContextProperty("applicationController", &controller);
+    engine.rootContext()->setContextProperty("spriteController", &spriteController);
     engine.loadFromModule("DeskPet", "Main");
     if (engine.rootObjects().isEmpty()) return -1;
     return app.exec();

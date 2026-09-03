@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "character": "mage2d",
+  "placeholder_only": false,
+  "animations": {
+    "idle": { "fps": 8, "loop": true, "frames": 8, "anchor": [0.5, 1.0] },
+    "walk": { "fps": 12, "loop": true, "frames": 12, "anchor": [0.5, 1.0] },
+    "run": { "fps": 16, "loop": true, "frames": 12, "anchor": [0.5, 1.0] },
+    "jump": { "fps": 12, "loop": false, "frames": 12, "anchor": [0.5, 1.0] },
+    "sit": { "fps": 8, "loop": true, "frames": 8, "anchor": [0.5, 1.0] },
+    "wave": { "fps": 10, "loop": false, "frames": 12, "anchor": [0.5, 1.0] },
+    "sleep": { "fps": 6, "loop": true, "frames": 8, "anchor": [0.5, 1.0] },
+    "celebrate": { "fps": 12, "loop": false, "frames": 12, "anchor": [0.5, 1.0] },
+    "dead": { "fps": 8, "loop": false, "frames": 8, "anchor": [0.5, 1.0] },
+    "angry": { "fps": 10, "loop": true, "frames": 8, "anchor": [0.5, 1.0] },
+    "happy": { "fps": 8, "loop": true, "frames": 8, "anchor": [0.5, 1.0] }
+  }
+}
